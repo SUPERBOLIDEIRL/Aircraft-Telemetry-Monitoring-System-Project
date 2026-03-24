@@ -128,9 +128,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AircraftTelemetry.cpp" />
+    <ClCompile Include="client.cpp" />
+    <ClCompile Include="logger.cpp" />
+    <ClCompile Include="packet.cpp" />
+    <ClCompile Include="server.cpp" />
+    <ClCompile Include="socket.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="logger.h" />
     <ClInclude Include="packet.h" />
+    <ClInclude Include="socket.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

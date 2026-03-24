@@ -16,3 +16,9 @@ typedef struct {
     char aircraftID[AIRCRAFT_ID_SIZE];
     char* payload;
 } TelemetryPacket;
+
+// Function prototypes
+TelemetryPacket* create_packet(int32_t type, const char* aircraftID, const char* payload, int32_t payloadSize);
+void free_packet(TelemetryPacket* packet);
+int send_packet(SOCKET sock, const TelemetryPacket* packet);
+TelemetryPacket* receive_packet(SOCKET sock);
