@@ -5,6 +5,7 @@
 #include "../Shared/packet.h"
 #include "../Shared/socket.h"
 #include "../Shared/logger.h"
+#include "thresholds.h"
 
 // Default connection target overridable via argv[1] and argv[2].
 static constexpr const char* DEFAULT_HOST = "127.0.0.1";
@@ -45,9 +46,9 @@ static bool perform_handshake(SOCKET sock)
         memcmp(response->payload, "ACK", 3) == 0);
 
     if (acked)
-        log_event("Handshake successful — server acknowledged");
+        log_event("Handshake successful - server acknowledged");
     else
-        log_event("Handshake FAILED — server sent NACK or unexpected response");
+        log_event("Handshake FAILED - server sent NACK or unexpected response");
 
     free_packet(response);
     return acked;
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
     if (argc > 2) port = std::stoi(argv[2]);
 
     init_logger("client_log.txt");
-    log_event("Client starting — target: " + std::string(host) +
+    log_event("Client starting - target: " + std::string(host) +
         ":" + std::to_string(port));
 
     if (!init_winsock())
@@ -89,9 +90,56 @@ int main(int argc, char* argv[])
     bool authenticated = perform_handshake(sock);
 
     if (!authenticated)
-        log_event("Session terminated — authentication failed");
+    {
+        log_event("Session terminated - authentication failed");
+    }
     else
-        log_event("Session ready — Sprint 2 features will go here");
+    {
+        log_event("Session ready - entering main menu");
+
+        bool running = true;
+        while (running)
+        {
+            std::cout << "\n===== Ground Control Menu =====\n";
+            std::cout << "1) Request Telemetry\n";
+            std::cout << "2) Download Flight Data File\n";
+            std::cout << "3) View Log\n";
+            std::cout << "4) Exit\n";
+            std::cout << "Enter choice: ";
+
+            int choice;
+            if (!(std::cin >> choice))
+            {
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Invalid option, try again.\n";
+                continue;
+            }
+
+            switch (choice)
+            {
+            case 1:
+                std::cout << "Feature coming in Sprint 2\n";
+                log_event("User selected: Request Telemetry");
+                break;
+            case 2:
+                std::cout << "Feature coming in Sprint 2\n";
+                log_event("User selected: Download Flight Data File");
+                break;
+            case 3:
+                std::cout << "Feature coming in Sprint 2\n";
+                log_event("User selected: View Log");
+                break;
+            case 4:
+                log_event("User selected: Exit");
+                running = false;
+                break;
+            default:
+                std::cout << "Invalid option, try again.\n";
+                break;
+            }
+        }
+    }
 
     // cleanup
     close_socket(sock);
