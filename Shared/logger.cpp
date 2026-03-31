@@ -21,6 +21,7 @@ static std::string current_timestamp()
 
 void init_logger(const std::string& logFileName)
 {
+    if (s_logFile.is_open()) s_logFile.close(); 
     s_logFile.open(logFileName, std::ios::out | std::ios::app);
     if (!s_logFile.is_open())
     {
