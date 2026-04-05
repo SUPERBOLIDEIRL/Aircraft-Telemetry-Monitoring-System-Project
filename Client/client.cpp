@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <fstream>
 
 #include "../Shared/packet.h"
 #include "../Shared/socket.h"
@@ -94,6 +95,49 @@ static void request_telemetry(SOCKET sock)
     free_packet(response);
 }
 
+static void download_flight_data(SOCKET sock)
+{
+    // Send large data request
+    TelemetryPacket* request = create_packet(PACKET_TYPE_LARGE_DATA, "CLIENT001", "GET_LARGE_DATA", 14);
+    send_packet(sock, request);
+    log_packet(true, request->packetType, request->dataSize, request->aircraftID);
+    free_packet(request);
+
+    // Open output file
+    std::ofstream outFile("flight_data.bin", std::ios::binary);
+    if (!outFile.is_open())
+    {
+        log_event("ERROR: Could not open flight_data.bin for writing");
+        return;
+    }
+
+    // Receive data chunks
+    while (true)
+    {
+        TelemetryPacket* response = receive_packet(sock);
+        if (response == nullptr)
+        {
+            break;
+        }
+
+        if (response->packetType == PACKET_TYPE_ACK_NACK &&
+            response->dataSize >= 3 &&
+            memcmp(response->payload, "END", 3) == 0)
+        {
+            log_event("File transfer complete");
+            free_packet(response);
+            break;
+        }
+
+        outFile.write(response->payload, response->dataSize);
+        log_packet(false, response->packetType, response->dataSize, response->aircraftID);
+        free_packet(response);
+    }
+
+    outFile.close();
+    log_event("Flight data saved to flight_data.bin");
+}
+
 int main(int argc, char* argv[])
 {
     const char* host = DEFAULT_HOST;
@@ -162,7 +206,7 @@ int main(int argc, char* argv[])
                 log_event("User selected: Request Telemetry");
                 break;
             case 2:
-                std::cout << "Feature coming in Sprint 2\n";
+                download_flight_data(sock);
                 log_event("User selected: Download Flight Data File");
                 break;
             case 3:
