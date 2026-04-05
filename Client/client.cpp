@@ -54,6 +54,45 @@ static bool perform_handshake(SOCKET sock)
     return acked;
 }
 
+static void request_telemetry(SOCKET sock)
+{
+    // Send telemetry request
+    TelemetryPacket* request = create_packet(PACKET_TYPE_TELEMETRY, "CLIENT001", "GET_TELEMETRY", 13);
+    send_packet(sock, request);
+    log_packet(true, request->packetType, request->dataSize, request->aircraftID);
+    free_packet(request);
+
+    // Receive response
+    TelemetryPacket* response = receive_packet(sock);
+    if (response == nullptr)
+    {
+        log_event("ERROR: No telemetry response received");
+        return;
+    }
+
+    log_packet(false, response->packetType, response->dataSize, response->aircraftID);
+
+    // Cast payload to TelemetryData and print fields
+    TelemetryData* data = reinterpret_cast<TelemetryData*>(response->payload);
+    std::cout << "Altitude (ft): " << data->altitude_ft << "\n";
+    std::cout << "Airspeed (knots): " << data->airspeed_knots << "\n";
+    std::cout << "Fuel Level (%): " << data->fuel_level_percent << "\n";
+    std::cout << "Engine Temp (C): " << data->engine_temp_celsius << "\n";
+    std::cout << "GPS Lat: " << data->gps_latitude << "\n";
+    std::cout << "GPS Lon: " << data->gps_longitude << "\n";
+
+    // Check thresholds and print warnings
+    if (data->fuel_level_percent < FUEL_LEVEL_MIN_PERCENT)
+        std::cout << "WARNING: Fuel level below safe threshold\n";
+    if (data->engine_temp_celsius > ENGINE_TEMP_MAX_CELSIUS)
+        std::cout << "WARNING: Engine temperature above safe threshold\n";
+    if (data->altitude_ft > ALTITUDE_MAX_FEET)
+        std::cout << "WARNING: Altitude above safe limit\n";
+    if (data->airspeed_knots > AIRSPEED_MAX_KNOTS)
+        std::cout << "WARNING: Airspeed above safe limit\n";
+
+    free_packet(response);
+}
 
 int main(int argc, char* argv[])
 {
@@ -119,7 +158,7 @@ int main(int argc, char* argv[])
             switch (choice)
             {
             case 1:
-                std::cout << "Feature coming in Sprint 2\n";
+                request_telemetry(sock);
                 log_event("User selected: Request Telemetry");
                 break;
             case 2:
