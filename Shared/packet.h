@@ -26,6 +26,17 @@ struct TelemetryPacket
     char* payload;
 };
 
+// Serialized into the payload field of a PACKET_TYPE_TELEMETRY packet
+struct TelemetryData
+{
+    float altitude_ft;
+    float airspeed_knots;
+    float fuel_level_percent;
+    float engine_temp_celsius;
+    float gps_latitude;
+    float gps_longitude;
+};
+
 TelemetryPacket* create_packet(int32_t type, const char* aircraftID, const char* payload, int32_t payloadSize);
 
 void free_packet(TelemetryPacket* packet);
