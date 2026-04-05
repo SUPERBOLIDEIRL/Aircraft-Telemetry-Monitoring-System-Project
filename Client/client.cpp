@@ -138,6 +138,27 @@ static void download_flight_data(SOCKET sock)
     log_event("Flight data saved to flight_data.bin");
 }
 
+static void view_log()
+{
+    std::ifstream inFile("client_log.txt");
+    if (!inFile.is_open())
+    {
+        std::cout << "ERROR: Could not open log file.\n";
+        return;
+    }
+
+    std::cout << "===== Client Log =====\n";
+
+    std::string line;
+    while (std::getline(inFile, line))
+    {
+        std::cout << line << "\n";
+    }
+
+    inFile.close();
+    std::cout << "===== End of Log =====\n";
+}
+
 int main(int argc, char* argv[])
 {
     const char* host = DEFAULT_HOST;
@@ -210,7 +231,7 @@ int main(int argc, char* argv[])
                 log_event("User selected: Download Flight Data File");
                 break;
             case 3:
-                std::cout << "Feature coming in Sprint 2\n";
+                view_log();
                 log_event("User selected: View Log");
                 break;
             case 4:
