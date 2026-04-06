@@ -216,7 +216,7 @@ static void run_session(SOCKET clientSock, ServerState& state)
                 // Reject a second handshake once already processing commands.
                 if (state == ServerState::PROCESSING_COMMAND)
                 {
-                    log_event("Duplicate handshake ignored, already authenticated");
+                    log_event("Duplicate handshake ignored - already authenticated");
                     TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "NACK", 4);
                     send_packet(clientSock, nack);
                     log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
@@ -243,7 +243,7 @@ static void run_session(SOCKET clientSock, ServerState& state)
 
             case PACKET_TYPE_CMD_RESPONSE:
             {
-                log_event("Received packet type " + std::to_string(packet->packetType) + ", not implemented");
+                log_event("Received packet type " + std::to_string(packet->packetType) + " - not implemented");
                 TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "UNSUPPORTED", 11);
                 send_packet(clientSock, nack);
                 log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
