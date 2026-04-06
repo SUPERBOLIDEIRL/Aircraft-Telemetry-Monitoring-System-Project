@@ -76,7 +76,7 @@ static bool handle_handshake(SOCKET clientSock, TelemetryPacket* packet, ServerS
     }
     else
     {
-        TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID,"NACK", 4);
+        TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "NACK", 4);
         send_packet(clientSock, nack);
         log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
         free_packet(nack);
@@ -101,7 +101,7 @@ static void run_session(SOCKET clientSock, ServerState& state)
         {
             // nullptr means the peer disconnected or the socket errored.
             log_event("Client disconnected or receive error");
-            transition(state, ServerState::DISCONNECTED, "recv-failed");
+            transition(state, ServerState::ERROR_STATE, "recv-failed");
             break;
         }
 
@@ -200,20 +200,29 @@ int main(int argc, char* argv[])
     // accept loop for handling sequential clients
     while (true)
     {
+        if (state == ServerState::ERROR_STATE)
+        {
+            transition(state, ServerState::IDLE, "recovery-reset");
+            transition(state, ServerState::WAITING_FOR_CLIENT, "ready-for-new-connection");
+        }
+
         log_event("Waiting for client connection...");
 
         SOCKET clientSock = accept_client(listenSock);
         if (clientSock == INVALID_SOCKET)
         {
             transition(state, ServerState::ERROR_STATE, "accept-failed");
-            log_event("accept_client() failed — shutting down");
-            break;
+            continue;
         }
 
         run_session(clientSock, state);
 
         close_socket(clientSock);
-        transition(state, ServerState::WAITING_FOR_CLIENT, "client-disconnected");
+
+        if (state != ServerState::ERROR_STATE)
+        {
+            transition(state, ServerState::WAITING_FOR_CLIENT, "client-disconnected");
+        }
     }
 
     close_socket(listenSock);

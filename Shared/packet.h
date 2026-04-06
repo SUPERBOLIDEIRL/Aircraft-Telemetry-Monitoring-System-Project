@@ -16,12 +16,11 @@ constexpr int32_t PACKET_TYPE_ACK_NACK = 5;
 
 constexpr int AIRCRAFT_ID_SIZE = 16;
 
-
-
 struct TelemetryPacket
 {
     int32_t  packetType;
     int32_t  dataSize;
+    uint16_t checksum;
     char     aircraftID[AIRCRAFT_ID_SIZE];
     char* payload;
 };
@@ -36,6 +35,8 @@ struct TelemetryData
     float gps_latitude;
     float gps_longitude;
 };
+
+uint16_t calculate_checksum(const char* data, int32_t size);
 
 TelemetryPacket* create_packet(int32_t type, const char* aircraftID, const char* payload, int32_t payloadSize);
 
