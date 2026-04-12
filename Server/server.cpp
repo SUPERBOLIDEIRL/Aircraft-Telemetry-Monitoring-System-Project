@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <cstdlib>
+#include <ctime>
+#include <fstream>
 
 #include "../Shared/packet.h"
 #include "../Shared/socket.h"
@@ -76,14 +79,110 @@ static bool handle_handshake(SOCKET clientSock, TelemetryPacket* packet, ServerS
     }
     else
     {
-        TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID,"NACK", 4);
+        TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "NACK", 4);
         send_packet(clientSock, nack);
         log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
         free_packet(nack);
 
-        log_event("Handshake FAILED — bad or missing AUTH payload, rejecting client");
+        log_event("Handshake FAILED, bad or missing AUTH payload, rejecting client");
         return false;
     }
+}
+
+static constexpr int CHUNK_SIZE = 4096;
+
+static void handle_telemetry(SOCKET clientSock, TelemetryPacket* packet)
+{
+    TelemetryData data{};
+    data.altitude_ft = 30000.0f + static_cast<float>(rand() % 10000);
+    data.airspeed_knots = 400.0f + static_cast<float>(rand() % 100);
+    data.fuel_level_percent = 15.0f + static_cast<float>(rand() % 85);
+    data.engine_temp_celsius = 800.0f + static_cast<float>(rand() % 300);
+    data.gps_latitude = 43.0f + static_cast<float>(rand() % 100) / 100.0f;
+    data.gps_longitude = -79.0f - static_cast<float>(rand() % 100) / 100.0f;
+
+    TelemetryPacket* response = create_packet(PACKET_TYPE_TELEMETRY, packet->aircraftID, reinterpret_cast<const char*>(&data), sizeof(TelemetryData));
+    send_packet(clientSock, response);
+    log_packet(true, response->packetType, response->dataSize, response->aircraftID);
+    free_packet(response);
+
+    TelemetryPacket* ack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "ACK", 3);
+    send_packet(clientSock, ack);
+    log_packet(true, ack->packetType, ack->dataSize, ack->aircraftID);
+    free_packet(ack);
+
+    log_event("Telemetry data sent and ACK issued");
+}
+
+static void handle_large_data(SOCKET clientSock, TelemetryPacket* packet, ServerState& state)
+{
+    transition(state, ServerState::TRANSFERRING_DATA, "large-data-start");
+
+    std::ifstream inFile("flight_data.bin", std::ios::binary);
+    bool usingFile = inFile.is_open();
+
+    const int    GENERATED_SIZE = 1024 * 1024;
+    int          totalSize = 0;
+    int          bytesSent = 0;
+
+    char* generatedData = nullptr;
+
+    if (usingFile)
+    {
+        inFile.seekg(0, std::ios::end);
+        totalSize = static_cast<int>(inFile.tellg());
+        inFile.seekg(0, std::ios::beg);
+        log_event("Sending flight_data.bin (" + std::to_string(totalSize) + " bytes)");
+    }
+    else
+    {
+        totalSize = GENERATED_SIZE;
+        generatedData = new char[totalSize];
+        for (int i = 0; i < totalSize; ++i)
+            generatedData[i] = static_cast<char>(i & 0xFF);
+        log_event("flight_data.bin not found - sending " +
+            std::to_string(totalSize) + " bytes of generated data");
+    }
+
+    char chunkBuf[CHUNK_SIZE];
+
+    while (bytesSent < totalSize)
+    {
+        int remaining = totalSize - bytesSent;
+        int chunkBytes = (remaining < CHUNK_SIZE) ? remaining : CHUNK_SIZE;
+
+        if (usingFile)
+        {
+            inFile.read(chunkBuf, chunkBytes);
+            chunkBytes = static_cast<int>(inFile.gcount());
+            if (chunkBytes <= 0) break;
+        }
+        else
+        {
+            memcpy(chunkBuf, generatedData + bytesSent, chunkBytes);
+        }
+
+        TelemetryPacket* chunk = create_packet(PACKET_TYPE_LARGE_DATA,
+            packet->aircraftID,
+            chunkBuf,
+            chunkBytes);
+        send_packet(clientSock, chunk);
+        log_packet(true, chunk->packetType, chunk->dataSize, chunk->aircraftID);
+        free_packet(chunk);
+
+        bytesSent += chunkBytes;
+    }
+
+    if (usingFile) inFile.close();
+    delete[] generatedData;
+
+    TelemetryPacket* end = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "END", 3);
+    send_packet(clientSock, end);
+    log_packet(true, end->packetType, end->dataSize, end->aircraftID);
+    free_packet(end);
+
+    log_event("Large data transfer complete - " + std::to_string(bytesSent) + " bytes sent");
+    transition(state, ServerState::PROCESSING_COMMAND, "large-data-done");
 }
 
 // session loop
@@ -101,7 +200,7 @@ static void run_session(SOCKET clientSock, ServerState& state)
         {
             // nullptr means the peer disconnected or the socket errored.
             log_event("Client disconnected or receive error");
-            transition(state, ServerState::DISCONNECTED, "recv-failed");
+            transition(state, ServerState::ERROR_STATE, "recv-failed");
             break;
         }
 
@@ -117,7 +216,7 @@ static void run_session(SOCKET clientSock, ServerState& state)
                 // Reject a second handshake once already processing commands.
                 if (state == ServerState::PROCESSING_COMMAND)
                 {
-                    log_event("Duplicate handshake ignored — already authenticated");
+                    log_event("Duplicate handshake ignored - already authenticated");
                     TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "NACK", 4);
                     send_packet(clientSock, nack);
                     log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
@@ -131,10 +230,20 @@ static void run_session(SOCKET clientSock, ServerState& state)
             }
 
             case PACKET_TYPE_TELEMETRY:
+            {
+                handle_telemetry(clientSock, packet);
+                break;
+            }
+
             case PACKET_TYPE_LARGE_DATA:
+            {
+                handle_large_data(clientSock, packet, state);
+                break;
+            }
+
             case PACKET_TYPE_CMD_RESPONSE:
             {
-                log_event("Received packet type " + std::to_string(packet->packetType) + " — not implemented in Sprint 1");
+                log_event("Received packet type " + std::to_string(packet->packetType) + " - not implemented");
                 TelemetryPacket* nack = create_packet(PACKET_TYPE_ACK_NACK, packet->aircraftID, "UNSUPPORTED", 11);
                 send_packet(clientSock, nack);
                 log_packet(true, nack->packetType, nack->dataSize, nack->aircraftID);
@@ -175,6 +284,8 @@ int main(int argc, char* argv[])
     if (argc > 1)
         port = std::stoi(argv[1]);
 
+    srand(static_cast<unsigned int>(time(nullptr)));
+
     init_logger("server_log.txt");
     log_event("Server starting on port " + std::to_string(port));
 
@@ -200,20 +311,29 @@ int main(int argc, char* argv[])
     // accept loop for handling sequential clients
     while (true)
     {
+        if (state == ServerState::ERROR_STATE)
+        {
+            transition(state, ServerState::IDLE, "recovery-reset");
+            transition(state, ServerState::WAITING_FOR_CLIENT, "ready-for-new-connection");
+        }
+
         log_event("Waiting for client connection...");
 
         SOCKET clientSock = accept_client(listenSock);
         if (clientSock == INVALID_SOCKET)
         {
             transition(state, ServerState::ERROR_STATE, "accept-failed");
-            log_event("accept_client() failed — shutting down");
-            break;
+            continue;
         }
 
         run_session(clientSock, state);
 
         close_socket(clientSock);
-        transition(state, ServerState::WAITING_FOR_CLIENT, "client-disconnected");
+
+        if (state != ServerState::ERROR_STATE)
+        {
+            transition(state, ServerState::WAITING_FOR_CLIENT, "client-disconnected");
+        }
     }
 
     close_socket(listenSock);
