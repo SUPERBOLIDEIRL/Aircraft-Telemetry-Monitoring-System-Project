@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{604bc70a-bad4-4827-b8e1-86b95b62f21c}</ProjectGuid>
-    <RootNamespace>AircraftTelemetry</RootNamespace>
+    <ProjectGuid>{0eed2f28-d3ce-449a-b2d3-72719396430a}</ProjectGuid>
+    <RootNamespace>Client</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -104,6 +104,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -127,10 +129,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AircraftTelemetry.cpp" />
+    <ClCompile Include="..\Shared\logger.cpp" />
+    <ClCompile Include="..\Shared\packet.cpp" />
+    <ClCompile Include="..\Shared\socket.cpp" />
+    <ClCompile Include="client.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="packet.h" />
+    <ClInclude Include="..\Shared\logger.h" />
+    <ClInclude Include="..\Shared\packet.h" />
+    <ClInclude Include="..\Shared\socket.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

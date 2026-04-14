@@ -1,0 +1,13 @@
+[06:32:32] Server starting on port 8080
+[06:32:32] State: IDLE -> WAITING_FOR_CLIENT  [event: server-ready]
+[06:32:32] Waiting for client connection...
+[06:32:32] State: WAITING_FOR_CLIENT -> CONNECTED  [event: client-accepted]
+[06:32:32] [RX] PacketType=1 DataSize=4 AircraftID=CLIENT001
+[06:32:32] Handshake received from aircraft: CLIENT001
+[06:32:32] [TX] PacketType=5 DataSize=3 AircraftID=CLIENT001
+[06:32:32] State: CONNECTED -> PROCESSING_COMMAND  [event: handshake-ok]
+[06:32:32] Client authenticated successfully
+[06:32:32] Client disconnected or receive error
+[06:32:32] State: PROCESSING_COMMAND -> DISCONNECTED  [event: recv-failed]
+[06:32:32] State: DISCONNECTED -> WAITING_FOR_CLIENT  [event: client-disconnected]
+[06:32:32] Waiting for client connection...
