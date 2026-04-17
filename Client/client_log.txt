@@ -5,3 +5,10 @@
 [06:32:32] Handshake successful — server acknowledged
 [06:32:32] Session ready — Sprint 2 features will go here
 [06:32:32] Client shut down
+[15:07:31] Client starting — target: 127.0.0.1:8080
+[15:07:31] Connected to server at 127.0.0.1:8080
+[15:07:31] [TX] PacketType=1 DataSize=4 AircraftID=CLIENT001
+[15:07:31] [RX] PacketType=5 DataSize=3 AircraftID=CLIENT001
+[15:07:31] Handshake successful — server acknowledged
+[15:07:31] Session ready — Sprint 2 features will go here
+[15:07:31] Client shut down
