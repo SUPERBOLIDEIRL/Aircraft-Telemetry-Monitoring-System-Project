@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 #include "../Client/thresholds.h"
 #include "../Shared/packet.h"
+using namespace Thresholds;
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -12,10 +13,10 @@ namespace AircraftTelemetryTests
     public:
         TEST_METHOD(TestThresholdConstants)
         {
-            Assert::AreEqual(20.0f, FUEL_LEVEL_MIN_PERCENT);
-            Assert::AreEqual(950.0f, ENGINE_TEMP_MAX_CELSIUS);
-            Assert::AreEqual(45000.0f, ALTITUDE_MAX_FEET);
-            Assert::AreEqual(500.0f, AIRSPEED_MAX_KNOTS);
+            Assert::AreEqual(20.0F, FUEL_LEVEL_MIN_PERCENT);
+            Assert::AreEqual(950.0F, ENGINE_TEMP_MAX_CELSIUS);
+            Assert::AreEqual(45000.0F, ALTITUDE_MAX_FEET);
+            Assert::AreEqual(500.0F, AIRSPEED_MAX_KNOTS);
         }
 
         TEST_METHOD(TestTelemetryDataStructSize)
@@ -26,25 +27,25 @@ namespace AircraftTelemetryTests
         TEST_METHOD(TestTelemetryDataFieldAssignment)
         {
             TelemetryData data{};
-            data.altitude_ft = 35000.0f;
-            data.airspeed_knots = 420.0f;
-            data.fuel_level_percent = 65.5f;
-            data.engine_temp_celsius = 875.0f;
-            data.gps_latitude = 37.7749f;
-            data.gps_longitude = -122.4194f;
+            data.altitude_ft = 35000.0F;
+            data.airspeed_knots = 420.0F;
+            data.fuel_level_percent = 65.5F;
+            data.engine_temp_celsius = 875.0F;
+            data.gps_latitude = 37.7749F;
+            data.gps_longitude = -122.4194F;
 
-            Assert::AreEqual(35000.0f, data.altitude_ft);
-            Assert::AreEqual(420.0f, data.airspeed_knots);
+            Assert::AreEqual(35000.0F, data.altitude_ft);
+            Assert::AreEqual(420.0F, data.airspeed_knots);
             Assert::AreEqual(65.5f, data.fuel_level_percent);
-            Assert::AreEqual(875.0f, data.engine_temp_celsius);
-            Assert::AreEqual(37.7749f, data.gps_latitude);
-            Assert::AreEqual(-122.4194f, data.gps_longitude);
+            Assert::AreEqual(875.0F, data.engine_temp_celsius);
+            Assert::AreEqual(37.7749F, data.gps_latitude);
+            Assert::AreEqual(-122.4194F, data.gps_longitude);
         }
 
         TEST_METHOD(TestFuelWarningTriggered)
         {
             TelemetryData data{};
-            data.fuel_level_percent = 10.0f;
+            data.fuel_level_percent = 10.0F;
 
             Assert::IsTrue(data.fuel_level_percent < FUEL_LEVEL_MIN_PERCENT);
         }
@@ -52,7 +53,7 @@ namespace AircraftTelemetryTests
         TEST_METHOD(TestFuelWarningNotTriggered)
         {
             TelemetryData data{};
-            data.fuel_level_percent = 50.0f;
+            data.fuel_level_percent = 50.0F;
 
             Assert::IsFalse(data.fuel_level_percent < FUEL_LEVEL_MIN_PERCENT);
         }
@@ -60,7 +61,7 @@ namespace AircraftTelemetryTests
         TEST_METHOD(TestEngineTempWarningTriggered)
         {
             TelemetryData data{};
-            data.engine_temp_celsius = 1000.0f;
+            data.engine_temp_celsius = 1000.0F;
 
             Assert::IsTrue(data.engine_temp_celsius > ENGINE_TEMP_MAX_CELSIUS);
         }
@@ -68,7 +69,7 @@ namespace AircraftTelemetryTests
         TEST_METHOD(TestAltitudeWarningTriggered)
         {
             TelemetryData data{};
-            data.altitude_ft = 50000.0f;
+            data.altitude_ft = 50000.0F;
 
             Assert::IsTrue(data.altitude_ft > ALTITUDE_MAX_FEET);
         }
@@ -76,7 +77,7 @@ namespace AircraftTelemetryTests
         TEST_METHOD(TestAirspeedWarningTriggered)
         {
             TelemetryData data{};
-            data.airspeed_knots = 600.0f;
+            data.airspeed_knots = 600.0F;
 
             Assert::IsTrue(data.airspeed_knots > AIRSPEED_MAX_KNOTS);
         }

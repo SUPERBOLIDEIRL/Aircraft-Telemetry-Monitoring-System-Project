@@ -8,6 +8,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+using namespace Thresholds;
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -57,12 +58,12 @@ void run_mini_server(int port, std::atomic<bool>& ready, std::atomic<int>& recei
             else if (packet->packetType == PACKET_TYPE_TELEMETRY)
             {
                 TelemetryData data{};
-                data.altitude_ft = 35000.0f;
-                data.airspeed_knots = 420.0f;
-                data.fuel_level_percent = 15.0f;
-                data.engine_temp_celsius = 900.0f;
-                data.gps_latitude = 43.5f;
-                data.gps_longitude = -79.5f;
+                data.altitude_ft = 35000.0F;
+                data.airspeed_knots = 420.0F;
+                data.fuel_level_percent = 15.0F;
+                data.engine_temp_celsius = 900.0F;
+                data.gps_latitude = 43.5F;
+                data.gps_longitude = -79.5F;
 
                 TelemetryPacket* telemetryResponse = create_packet(
                     PACKET_TYPE_TELEMETRY,

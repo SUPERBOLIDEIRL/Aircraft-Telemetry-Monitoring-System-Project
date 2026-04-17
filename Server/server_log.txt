@@ -11,3 +11,16 @@
 [06:32:32] State: PROCESSING_COMMAND -> DISCONNECTED  [event: recv-failed]
 [06:32:32] State: DISCONNECTED -> WAITING_FOR_CLIENT  [event: client-disconnected]
 [06:32:32] Waiting for client connection...
+[15:07:31] Server starting on port 8080
+[15:07:31] State: IDLE -> WAITING_FOR_CLIENT  [event: server-ready]
+[15:07:31] Waiting for client connection...
+[15:07:31] State: WAITING_FOR_CLIENT -> CONNECTED  [event: client-accepted]
+[15:07:31] [RX] PacketType=1 DataSize=4 AircraftID=CLIENT001
+[15:07:31] Handshake received from aircraft: CLIENT001
+[15:07:31] [TX] PacketType=5 DataSize=3 AircraftID=CLIENT001
+[15:07:31] State: CONNECTED -> PROCESSING_COMMAND  [event: handshake-ok]
+[15:07:31] Client authenticated successfully
+[15:07:31] Client disconnected or receive error
+[15:07:31] State: PROCESSING_COMMAND -> DISCONNECTED  [event: recv-failed]
+[15:07:31] State: DISCONNECTED -> WAITING_FOR_CLIENT  [event: client-disconnected]
+[15:07:31] Waiting for client connection...
