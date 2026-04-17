@@ -8,40 +8,56 @@
 
 #include <cstdint>
 
-constexpr int32_t PACKET_TYPE_HANDSHAKE = 1;
-constexpr int32_t PACKET_TYPE_TELEMETRY = 2;
-constexpr int32_t PACKET_TYPE_LARGE_DATA = 3;
-constexpr int32_t PACKET_TYPE_CMD_RESPONSE = 4;
-constexpr int32_t PACKET_TYPE_ACK_NACK = 5;
-
-constexpr int AIRCRAFT_ID_SIZE = 16;
-
-struct TelemetryPacket
+// MISRA-CPP-2008-7-3-1: Wrap constants/types in a namespace
+namespace Telemetry
 {
-    int32_t  packetType;
-    int32_t  dataSize;
-    uint16_t checksum;
-    char     aircraftID[AIRCRAFT_ID_SIZE];
-    char* payload;
-};
+    constexpr int32_t PACKET_TYPE_HANDSHAKE    = 1;
+    constexpr int32_t PACKET_TYPE_TELEMETRY    = 2;
+    constexpr int32_t PACKET_TYPE_LARGE_DATA   = 3;
+    constexpr int32_t PACKET_TYPE_CMD_RESPONSE = 4;
+    constexpr int32_t PACKET_TYPE_ACK_NACK     = 5;
 
-// Serialized into the payload field of a PACKET_TYPE_TELEMETRY packet
-struct TelemetryData
-{
-    float altitude_ft;
-    float airspeed_knots;
-    float fuel_level_percent;
-    float engine_temp_celsius;
-    float gps_latitude;
-    float gps_longitude;
-};
+    constexpr int AIRCRAFT_ID_SIZE = 16;
 
-uint16_t calculate_checksum(const char* data, int32_t size);
+    struct TelemetryPacket
+    {
+        int32_t  packetType;
+        int32_t  dataSize;
+        uint16_t checksum;
+        char     aircraftID[AIRCRAFT_ID_SIZE];
+        char*    payload;
+    };
 
-TelemetryPacket* create_packet(int32_t type, const char* aircraftID, const char* payload, int32_t payloadSize);
+    // Serialized into the payload field of a PACKET_TYPE_TELEMETRY packet
+    struct TelemetryData
+    {
+        float altitude_ft;
+        float airspeed_knots;
+        float fuel_level_percent;
+        float engine_temp_celsius;
+        float gps_latitude;
+        float gps_longitude;
+    };
 
-void free_packet(TelemetryPacket* packet);
+    uint16_t       calculate_checksum(const char* data, int32_t size);
+    TelemetryPacket* create_packet(int32_t type, const char* aircraftID, const char* payload, int32_t payloadSize);
+    void           free_packet(TelemetryPacket* packet);
+    int            send_packet(SOCKET sock, const TelemetryPacket* packet);
+    TelemetryPacket* receive_packet(SOCKET sock);
 
-int send_packet(SOCKET sock, const TelemetryPacket* packet);
+} // namespace Telemetry
 
-TelemetryPacket* receive_packet(SOCKET sock);
+// Convenience aliases so existing call-sites keep compiling without changes
+using Telemetry::TelemetryPacket;
+using Telemetry::TelemetryData;
+using Telemetry::create_packet;
+using Telemetry::free_packet;
+using Telemetry::send_packet;
+using Telemetry::receive_packet;
+using Telemetry::calculate_checksum;
+using Telemetry::PACKET_TYPE_HANDSHAKE;
+using Telemetry::PACKET_TYPE_TELEMETRY;
+using Telemetry::PACKET_TYPE_LARGE_DATA;
+using Telemetry::PACKET_TYPE_CMD_RESPONSE;
+using Telemetry::PACKET_TYPE_ACK_NACK;
+using Telemetry::AIRCRAFT_ID_SIZE;

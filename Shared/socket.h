@@ -8,12 +8,21 @@
 
 #include <string>
 
+// MISRA-CPP-2008-7-3-1: declarations in namespace
+namespace SocketLib
+{
+    bool   init_winsock();
+    void   cleanup_winsock();
+    SOCKET create_server_socket(int port);
+    SOCKET accept_client(SOCKET listenSock);
+    SOCKET create_client_socket(const std::string& host, int port);
+    void   close_socket(SOCKET sock);
+}
 
-bool init_winsock();
-void cleanup_winsock();
-
+// Convenience wrappers
+bool   init_winsock();
+void   cleanup_winsock();
 SOCKET create_server_socket(int port);
 SOCKET accept_client(SOCKET listenSock);
 SOCKET create_client_socket(const std::string& host, int port);
-
-void close_socket(SOCKET sock);
+void   close_socket(SOCKET sock);
